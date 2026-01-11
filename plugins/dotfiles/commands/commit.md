@@ -14,7 +14,7 @@ description: Stage, commit, and push changes using dotfile aliases
 Stage and commit changes using the dotfile git aliases:
 
 1. Run `gadd` to stage all changes
-2. Run `gcommit` to commit (auto-generates message with AI) or `gcommit "message"` if a message was provided
+2. Run `gcommit -m "<MESSAGE>"` to commit with a message for the commit
 3. Run `gpush` to push the changes to the remote branch
 
 Follow these commit conventions:
