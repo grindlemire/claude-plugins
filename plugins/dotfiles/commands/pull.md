@@ -5,11 +5,7 @@ description: Pull latest changes from upstream or main branch, handling conflict
 
 ## Context
 
-- Current branch: !`git branch --show-current`
-- Remote tracking branch: !`git rev-parse --abbrev-ref @{u} 2>/dev/null`
-- Default branch: main (will be detected at runtime if different)
 - Git status: !`gs`
-- Unpushed commits: !`git log @{u}..HEAD --oneline 2>/dev/null`
 
 ## Task
 

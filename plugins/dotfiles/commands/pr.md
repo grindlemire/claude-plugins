@@ -1,22 +1,20 @@
 ---
-allowed-tools: Bash(git:*), Bash(gh:*)
+allowed-tools: Bash(git:*), Bash(gh:*), Bash(gs:*)
 description: Commit, push, and create a pull request with thorough description
 ---
 
 ## Context
 
-- Current branch: !`git branch --show-current`
-- Base branch: !`git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@' || echo "main"`
-- Git status: !`git status --short`
-- Commits in this branch: !`git log origin/HEAD..HEAD --format="%h %s" 2>/dev/null || git log --oneline -10`
-- Files changed: !`git diff origin/HEAD...HEAD --stat 2>/dev/null || git diff HEAD~5 --stat`
-- Full diff: !`git diff origin/HEAD...HEAD 2>/dev/null || git diff HEAD~5`
+- Git status: !`gs`
+- Recent commits: !`git log --oneline -10`
 
 ## Task
 
-1. If there are uncommitted changes, stage and commit them
-2. Push the current branch to origin (use `-u` if needed)
-3. Create a pull request using `gh pr create`
+1. Get the current branch name with `git branch --show-current`
+2. If there are uncommitted changes, stage and commit them
+3. Push the current branch to origin (use `-u` if needed)
+4. Get the diff against main/master with `git diff main...HEAD` to understand changes for the PR description
+5. Create a pull request using `gh pr create`
 
 ## PR Title Guidelines
 
