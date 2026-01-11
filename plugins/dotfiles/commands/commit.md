@@ -1,7 +1,11 @@
 ---
-allowed-tools: Bash(gadd:*), Bash(gcommit:*), Bash(gs:*), Bash(gdiff:*), Bash(gdiffs:*), Bash(gpush:*)
+allowed-tools: Bash(gadd:*), Bash(gcommit:*), Bash(gs:*), Bash(gdiff:*), Bash(gdiffs:*), Bash(gpush:*), Bash(fixssh:*)
 description: Stage, commit, and push changes using dotfile aliases
 ---
+
+## SSH Signing Key Error Handling
+
+If any git command fails with an error about "No private key found" or similar SSH signing key errors, run `fixssh` and then retry the failed command.
 
 ## Context
 

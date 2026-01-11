@@ -1,7 +1,11 @@
 ---
-allowed-tools: Bash(git:*), Bash(gh:*), Bash(gs:*)
+allowed-tools: Bash(git:*), Bash(gh:*), Bash(gs:*), Bash(fixssh:*)
 description: Commit, push, and create a pull request with thorough description
 ---
+
+## SSH Signing Key Error Handling
+
+If any git command fails with an error about "No private key found" or similar SSH signing key errors, run `fixssh` and then retry the failed command.
 
 ## Context
 
