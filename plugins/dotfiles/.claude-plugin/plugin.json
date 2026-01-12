@@ -1,6 +1,6 @@
 {
   "name": "dotfiles",
-  "description": "Git worktree management, mage build commands, and PR workflow",
+  "description": "Git worktree management, mage build commands, PR workflow, and feature design planning",
   "version": "1.0.0",
   "author": {
     "name": "grindlemire"
