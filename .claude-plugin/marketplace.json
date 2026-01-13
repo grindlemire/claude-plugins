@@ -12,12 +12,12 @@
     {
       "name": "dotfiles",
       "source": "./plugins/dotfiles",
-      "description": "Git worktree management, mage build commands, PR workflow, feature design, and phase-by-phase build execution",
-      "version": "1.2.0",
+      "description": "Git worktree management, mage build commands, PR workflow, feature design, and orchestrated multi-phase execution",
+      "version": "1.3.0",
       "author": {
         "name": "grindlemire"
       },
-      "keywords": ["git", "worktree", "mage", "build", "deploy", "pr", "design"],
+      "keywords": ["git", "worktree", "mage", "build", "deploy", "pr", "design", "execute"],
       "category": "developer-tools"
     }
   ]

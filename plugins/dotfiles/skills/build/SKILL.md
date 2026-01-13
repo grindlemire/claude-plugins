@@ -1,216 +1,104 @@
 ---
 name: build
-description: Execute a single phase from a design plan created by the design skill. Reads the phase file, understands the overall design context, executes tasks, runs verification, and updates status. Use "/build <phase-file>" for a specific phase or "/build <design-dir>" to run the next pending phase.
+description: Executes a single phase from a design plan in the main conversation. Reads phase file and design context, executes tasks, runs verification, updates status. Use "/build <design-dir>" for next pending phase or "/build <phase-file>" for a specific phase.
 ---
 
 # Build
 
-Execute implementation phases created by the design skill.
+Execute a single implementation phase in the main conversation.
 
-## Inputs
+For automated multi-phase execution, use `/execute` instead.
 
-Accepts either:
-- A specific phase file: `/build design-auth/phase-2-middleware.md`
-- A design directory: `/build design-auth` (runs next pending phase)
+## Usage
+
+```bash
+/build design-auth              # Run next pending phase
+/build design-auth/phase-2-*.md # Run specific phase
+```
 
 ## Workflow
 
-### Step 1: Load Context
+### 1. Load Context
 
-1. **Locate files**
-   - If given a directory, read `manifest.yaml` to find the next pending phase
-   - If given a phase file, use it directly
+1. Read `manifest.yaml` to find next pending phase (or use specified phase)
+2. Parse phase frontmatter for dependencies and verification
+3. Read `design.md` for architectural context
+4. Read "Output for Next Phase" from dependency phases
 
-2. **Parse phase frontmatter**
-   ```yaml
-   ---
-   phase: 2
-   name: middleware
-   design: ../design.md
-   depends-on: [phase-1-core-types.md]
-   verification:
-     command: "go test ./auth/..."
-     expected: "PASS"
-   status: pending
-   ---
-   ```
+### 2. Execute Tasks
 
-3. **Read design.md** — Load the overall architecture, interfaces, and trade-off decisions
+For each task:
+1. **Read before writing** — Understand existing files before modifying
+2. **Follow plan precisely** — No extra features, refactoring, or "improvements"
+3. **Match codebase patterns** — Follow existing conventions
+4. **Track progress** — Use todo list for individual tasks
 
-4. **Read previous phase output** — If `depends-on` is specified, read the "Output for Next Phase" section from each dependency
+If blocked:
+- Check design.md for guidance
+- Ask user before proceeding on ambiguity
+- Do not assume on critical decisions
 
-5. **Check prerequisites** — Verify all dependent phases have `status: complete` in manifest
+### 3. Verify
 
-### Step 2: Execute Tasks
+1. Run verification command from phase frontmatter
+2. Compare output to expected result
+3. On failure: diagnose, fix, retry (up to 3 attempts)
+4. If still failing: report with diagnosis and suggested fixes
 
-For each task in the phase:
+### 4. Complete
 
-1. **Read before writing** — If modifying existing files, read them first to understand current state
+1. Update phase frontmatter: `status: complete`
+2. Update manifest.yaml with timestamp
+3. Verify "Output for Next Phase" reflects what was built
+4. Report completion summary
 
-2. **Follow the plan precisely**
-   - Implement exactly what the task specifies
-   - Do not add features, refactor surrounding code, or "improve" beyond scope
-   - Match existing patterns in the codebase
+## Principles
 
-3. **Track progress** — Use the todo list to track individual tasks within the phase
+**Follow the plan** — Design decisions are made. Execute, don't redesign.
 
-4. **Handle blockers**
-   - If a task is unclear, check the design.md for guidance
-   - If still blocked, ask the user before proceeding
-   - Do not make assumptions on ambiguous requirements
+**Verify before done** — Phase complete only when verification passes.
 
-### Step 3: Verify
+**Preserve context** — Update "Output for Next Phase" if implementation deviated.
 
-1. **Run verification command** from the phase frontmatter or Verification section:
-   ```bash
-   # From frontmatter
-   verification:
-     command: "go test ./auth/..."
-   ```
+**Stay focused** — Don't fix unrelated bugs, refactor adjacent code, or add features.
 
-2. **Check expected output** — Compare against the expected result in the phase file
+## Completion Output
 
-3. **Handle failures**
-   - Diagnose the root cause
-   - Fix the issue
-   - Retry verification (up to 3 attempts)
-   - If still failing after 3 attempts, report failure with:
-     - What was attempted
-     - Error output
-     - Suspected cause
-     - Suggested next steps
+```
+Phase 2 complete: middleware
 
-### Step 4: Complete Phase
+Added:
+- auth/middleware.go — JWT validation
+- auth/middleware_test.go — Tests
 
-1. **Update phase file** — Change frontmatter status:
-   ```yaml
-   status: complete
-   completed-at: 2025-01-13T10:30:00Z
-   ```
+Verification: go test ./auth/... PASS
 
-2. **Update manifest.yaml** — Mark phase complete with timestamp
-
-3. **Verify "Output for Next Phase"** — Ensure this section accurately reflects what was built. Update if implementation deviated from plan.
-
-4. **Report completion**
-   ```
-   Phase 2 complete: middleware
-
-   Added:
-   - auth/middleware.go — JWT validation middleware
-   - auth/middleware_test.go — Integration tests
-
-   Verification: go test ./auth/... PASS
-
-   Ready for: phase-3-endpoints.md
-   ```
-
-## Execution Principles
-
-### Follow the plan
-The design skill already made architectural decisions. The build skill's job is execution, not design. If the plan says "use Redis," use Redis—don't switch to memcached because it seems simpler.
-
-### Verify before declaring done
-A phase is complete only when:
-- All tasks are implemented
-- Verification command passes
-- Output matches expected results
-
-Never mark complete if tests are failing or verification is skipped.
-
-### Preserve context for next phase
-The "Output for Next Phase" section is the interface between phases. If you made implementation decisions (e.g., named a function differently than planned), update this section so the next phase has accurate information.
-
-### Stay focused
-- Don't fix unrelated bugs you notice
-- Don't refactor adjacent code
-- Don't add error handling for impossible cases
-- Don't add features "while you're in there"
-
-Complete the phase. Nothing more.
+Ready for: phase-3-endpoints.md
+```
 
 ## Error Handling
 
-### Prerequisite phase incomplete
+**Prerequisite incomplete:**
 ```
 Error: Phase 2 requires phase-1-core-types.md to be complete.
-Current status: pending
-
 Run: /build design-auth/phase-1-core-types.md
 ```
 
-### Verification failure
+**Verification failure:**
 ```
 Verification failed (attempt 2/3):
-
 Command: go test ./auth/...
-Output:
-  --- FAIL: TestValidateToken (0.00s)
-      jwt_test.go:45: expected ErrExpired, got ErrInvalidSignature
+Output: FAIL TestValidateToken
 
-Analyzing failure...
-[diagnosis and fix attempt]
+Diagnosing...
 ```
 
-### Ambiguous task
+**Ambiguous task:**
 ```
-Task 3 is ambiguous: "Add error handling for edge cases"
+Task 3 ambiguous: "Add error handling for edge cases"
 
-The design.md specifies these error cases:
-- Expired tokens → ErrExpired
-- Invalid signatures → ErrInvalidSignature
+Design.md specifies: ErrExpired, ErrInvalidSignature
 
-Should I also handle:
-- Malformed tokens (not valid JWT structure)?
-- Missing tokens (empty string)?
-
-[Asks user for clarification]
-```
-
-## Manifest Integration
-
-When a manifest.yaml exists, the build skill:
-
-1. **Reads phase order** from manifest instead of inferring from filenames
-2. **Checks dependencies** before starting a phase
-3. **Updates status** after completion
-4. **Enables `/build <dir>`** to auto-select next pending phase
-
-Example manifest.yaml:
-```yaml
-feature: user-authentication
-created: 2025-01-13T09:00:00Z
-design: design.md
-
-phases:
-  - file: phase-1-core-types.md
-    status: complete
-    completed-at: 2025-01-13T09:30:00Z
-
-  - file: phase-2-middleware.md
-    status: in-progress
-    started-at: 2025-01-13T10:00:00Z
-    depends-on: [phase-1-core-types.md]
-
-  - file: phase-3-endpoints.md
-    status: pending
-    depends-on: [phase-2-middleware.md]
-```
-
-## Usage Examples
-
-### Run specific phase
-```
-/build design-auth/phase-2-middleware.md
-```
-
-### Run next pending phase
-```
-/build design-auth
-```
-
-### Check status without running
-```
-Read the manifest.yaml to see current progress:
-cat design-auth/manifest.yaml
+Should I also handle malformed tokens?
+[Asks user]
 ```
