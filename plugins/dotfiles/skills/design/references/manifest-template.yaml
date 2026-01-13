@@ -1,0 +1,35 @@
+# Manifest Template
+#
+# The manifest tracks phase order, dependencies, and execution status.
+# Created by design-planner, updated by implementer.
+
+feature: <feature-name>
+created: <ISO 8601 timestamp>
+design: design.md
+
+phases:
+  - file: phase-1-<short-name>.md
+    status: pending          # pending | in-progress | complete | failed
+    depends-on: []
+    started-at: null
+    completed-at: null
+
+  - file: phase-2-<short-name>.md
+    status: pending
+    depends-on: [phase-1-<short-name>.md]
+    started-at: null
+    completed-at: null
+
+  - file: phase-3-<short-name>.md
+    status: pending
+    depends-on: [phase-2-<short-name>.md]
+    started-at: null
+    completed-at: null
+
+# Status values:
+#   pending     - Not yet started
+#   in-progress - Currently being executed
+#   complete    - All tasks done, verification passed
+#   failed      - Verification failed after retries
+
+# Timestamps use ISO 8601 format: 2025-01-13T10:30:00Z

@@ -1,11 +1,13 @@
 ---
-name: design-planner
+name: design
 description: Refine high-level feature specs or issues into detailed technical designs and implementation plans suitable for AI agent execution. Use when asked to "plan out how to implement," "design a feature," "create an implementation plan," or when given a feature spec/issue that needs architectural decisions, interface definitions, trade-off analysis, and a concrete task breakdown.
 ---
 
-# Design Planner
+# Design
 
 Transform feature specifications into technical designs and implementation plans.
+
+Plans are designed to be executed by the `build` skill, which processes phases sequentially while maintaining context from the overall design and previous phases.
 
 ## Workflow
 
@@ -62,10 +64,12 @@ Match depth to complexity. A small feature needs less than a system redesign.
 
 Break implementation into **phases**. Each phase:
 - Ends with something runnable that proves it works
-- Has its own markdown file
+- Has its own markdown file with YAML frontmatter
 - Specifies verification steps and output summary for the next phase
 
-See [references/plan-template.md](references/plan-template.md) for the phase template.
+See:
+- [references/plan-template.md](references/plan-template.md) for the phase template
+- [references/manifest-template.yaml](references/manifest-template.yaml) for the manifest format
 
 ### Phase design principles
 
@@ -102,10 +106,64 @@ Produce multiple files:
 
 ```
 design-<feature-name>/
+├── manifest.yaml              # Phase order, dependencies, status tracking
 ├── design.md                  # Architecture, interfaces, trade-offs
 ├── phase-1-<short-name>.md    # First phase tasks + verification
 ├── phase-2-<short-name>.md    # Second phase tasks + verification
 └── ...
 ```
 
-Each phase file is self-contained and can be handed to an AI agent independently (given prior phases are complete).
+### manifest.yaml
+
+The manifest tracks phase order, dependencies, and execution status:
+
+```yaml
+feature: <feature-name>
+created: <ISO timestamp>
+design: design.md
+
+phases:
+  - file: phase-1-<short-name>.md
+    status: pending
+    depends-on: []
+    started-at: null
+    completed-at: null
+
+  - file: phase-2-<short-name>.md
+    status: pending
+    depends-on: [phase-1-<short-name>.md]
+    started-at: null
+    completed-at: null
+```
+
+Status values: `pending`, `in-progress`, `complete`, `failed`
+
+See [references/manifest-template.yaml](references/manifest-template.yaml) for the full template.
+
+### Phase files
+
+Each phase file includes YAML frontmatter for machine parsing:
+
+```yaml
+---
+phase: 1
+name: short-name
+design: ../design.md
+depends-on: []
+verification:
+  command: "go test ./path/..."
+  expected: "PASS"
+status: pending
+---
+```
+
+Each phase file is self-contained and can be handed to the `build` skill independently (given prior phases are complete).
+
+### Execution
+
+After creating a design, run phases with the build skill:
+
+```
+/build design-<feature-name>              # Run next pending phase
+/build design-<feature-name>/phase-1-*.md # Run specific phase
+```

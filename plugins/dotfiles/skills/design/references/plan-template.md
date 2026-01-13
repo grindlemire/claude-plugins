@@ -2,17 +2,47 @@
 
 Each phase is a self-contained markdown file. An AI agent should be able to execute a phase given only that file and the output from the previous phase.
 
+## Frontmatter
+
+Every phase file must include YAML frontmatter for machine parsing:
+
+```yaml
+---
+phase: N
+name: short-name
+design: ../design.md
+depends-on: [phase-N-1-previous.md]  # Empty array for phase 1
+verification:
+  command: "go test ./path/..."
+  expected: "PASS"
+status: pending
+---
+```
+
+Fields:
+- `phase`: Phase number (1-indexed)
+- `name`: Short identifier matching filename
+- `design`: Relative path to design.md
+- `depends-on`: Array of prerequisite phase files
+- `verification.command`: Shell command to verify phase completion
+- `verification.expected`: Expected output pattern (substring match)
+- `status`: `pending` | `in-progress` | `complete` | `failed`
+
+## Body
+
 ```markdown
 # Phase N: [Short Name]
 
-## Prerequisites
+## Design Context
 
-- Phase N-1 complete
-- [Any other prerequisites]
+<!-- Key architectural decisions from design.md relevant to this phase -->
+- **Approach**: [summary of chosen approach]
+- **Key types**: [types this phase will use or create]
+- **Integration point**: [where this connects to existing code]
 
 ## Context from Previous Phase
 
-[Copy the "Output for Next Phase" section from the previous phase here. For Phase 1, state the starting point.]
+[Copy the "Output for Next Phase" section from the previous phase here. For Phase 1, describe the starting point.]
 
 ## Goal
 
