@@ -17,6 +17,14 @@ These are MANDATORY. Failure to follow invalidates the output:
 
 3. **manifest.yaml is REQUIRED** — Every design must include a manifest tracking phase order, dependencies, and status.
 
+## Output Location
+
+**Before creating any files, determine where to put the design:**
+
+1. Check if `./designs` directory exists
+2. If yes: create design at `./designs/design-<feature>/`
+3. If no: create design at `./design-<feature>/` (current directory)
+
 ## Workflow
 
 ### 1. Gather Context
@@ -24,6 +32,7 @@ These are MANDATORY. Failure to follow invalidates the output:
 - Check CLAUDE.md, README.md for architecture
 - Search for referenced files/types
 - Identify integration points
+- **Check if `./designs` directory exists** to determine output location
 
 ### 2. Clarify Ambiguities
 Ask before proceeding on unclear requirements. Do not assume on critical decisions.
@@ -72,6 +81,17 @@ phases:
 ```
 
 ## Output Structure
+
+If `./designs` exists:
+```
+designs/design-<feature>/
+├── manifest.yaml      # REQUIRED
+├── design.md          # Architecture
+├── phase-1-<name>.md  # With frontmatter
+└── phase-2-<name>.md  # With frontmatter
+```
+
+Otherwise:
 ```
 design-<feature>/
 ├── manifest.yaml      # REQUIRED

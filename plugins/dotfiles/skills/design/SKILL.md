@@ -47,6 +47,7 @@ Find codebase context:
 2. Check `README.md` for architecture
 3. Search for referenced files, functions, types
 4. Identify integration points and existing patterns
+5. Check if `./designs` directory exists (determines output location)
 
 ### Step 2: Clarify Ambiguities
 
@@ -110,8 +111,18 @@ Not too coarse (`Implement JWT auth`) or too granular (`Add import`).
 
 ## Output
 
+### Output Location
+
+**Before creating any files, determine where to put the design:**
+
+1. Check if `./designs` directory exists
+2. If yes: create design at `./designs/design-<feature>/`
+3. If no: create design at `./design-<feature>/` (current directory)
+
+### Directory Structure
+
 ```
-design-<feature-name>/
+[designs/]design-<feature-name>/
 ├── manifest.yaml          # REQUIRED: Phase order, dependencies, status
 ├── design.md              # Architecture, interfaces, trade-offs
 ├── phase-1-<name>.md      # First phase tasks + verification (MUST have frontmatter)
