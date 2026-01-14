@@ -9,17 +9,31 @@ Transform feature specifications into technical designs and phased implementatio
 
 ## Contents
 
+- [Non-Negotiable Requirements](#non-negotiable-requirements)
 - [Workflow](#workflow)
 - [Output Structure](#output)
 - [Execution](#execution)
 - [References](#references)
+
+## Non-Negotiable Requirements
+
+These requirements are **mandatory** and must never be skipped:
+
+1. **Get design feedback before phases** — Present the design to the user and receive explicit approval before creating any phase files or manifest. Do NOT proceed without user confirmation.
+
+2. **Phase files MUST have YAML frontmatter** — Every phase file must include the frontmatter block with `phase`, `name`, `design`, `depends-on`, `verification`, and `status` fields. Phase files without frontmatter are invalid.
+
+3. **Manifest file is REQUIRED** — Every design must include a `manifest.yaml` file. The manifest tracks phase order, dependencies, and status. A design directory without a manifest is incomplete.
+
+Failure to follow these requirements invalidates the design output.
 
 ## Workflow
 
 1. **Gather context** — Read spec, find codebase context
 2. **Clarify ambiguities** — Ask before proceeding on unclear requirements
 3. **Produce design** — Architecture, interfaces, trade-offs
-4. **Produce phases** — File/function-level tasks with verification
+4. **Get design feedback** — Present design to user, incorporate feedback
+5. **Produce phases** — File/function-level tasks with verification
 
 ### Step 1: Gather Context
 
@@ -56,7 +70,21 @@ Covers:
 
 Match depth to complexity.
 
-### Step 4: Produce Phases
+### Step 4: Get Design Feedback
+
+**This step is non-negotiable.** Before creating any phase files or the manifest:
+
+1. **Present the design** — Share the complete design.md with the user
+2. **Request explicit feedback** — Ask if they approve the design or want changes
+3. **Iterate until approved** — Make requested changes and re-present
+4. **Only proceed after approval** — Do NOT create phases until user confirms
+
+Example prompt:
+> "Here is the proposed design. Please review and let me know if you'd like any changes before I create the implementation phases."
+
+This checkpoint prevents wasted effort building phases for a design the user doesn't want.
+
+### Step 5: Produce Phases
 
 See [references/plan-template.md](references/plan-template.md).
 
@@ -84,14 +112,16 @@ Not too coarse (`Implement JWT auth`) or too granular (`Add import`).
 
 ```
 design-<feature-name>/
-├── manifest.yaml          # Phase order, dependencies, status
+├── manifest.yaml          # REQUIRED: Phase order, dependencies, status
 ├── design.md              # Architecture, interfaces, trade-offs
-├── phase-1-<name>.md      # First phase tasks + verification
-├── phase-2-<name>.md      # Second phase
+├── phase-1-<name>.md      # First phase tasks + verification (MUST have frontmatter)
+├── phase-2-<name>.md      # Second phase (MUST have frontmatter)
 └── ...
 ```
 
-### manifest.yaml
+### manifest.yaml (REQUIRED)
+
+**Every design MUST have a manifest.yaml file.** A design without a manifest is incomplete and invalid.
 
 See [references/manifest-template.yaml](references/manifest-template.yaml).
 
@@ -110,7 +140,9 @@ phases:
 
 Status: `pending` | `in-progress` | `complete` | `failed`
 
-### Phase frontmatter
+### Phase frontmatter (REQUIRED)
+
+**Every phase file MUST include YAML frontmatter.** Phase files without frontmatter are invalid and will cause execution failures.
 
 ```yaml
 ---
