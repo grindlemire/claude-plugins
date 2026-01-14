@@ -1,7 +1,7 @@
 {
   "name": "dotfiles",
   "description": "Git worktree management, mage build commands, PR workflow, feature design, and orchestrated multi-phase execution",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "author": {
     "name": "grindlemire"
   }
