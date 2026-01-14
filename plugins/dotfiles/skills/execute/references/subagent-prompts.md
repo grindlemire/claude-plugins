@@ -52,6 +52,9 @@ Execute a build phase from a design plan. Follow instructions precisely.
 ## Previous Phase Output
 <"Output for Next Phase" from dependency, or "Starting point" for phase 1>
 
+## Phase Frontmatter
+<YAML frontmatter from phase file — contains verification command>
+
 ## Phase to Execute
 <full contents of phase-N-*.md>
 
@@ -59,13 +62,14 @@ Execute a build phase from a design plan. Follow instructions precisely.
 1. Execute each task in the Tasks section
 2. Follow the plan precisely — no extra features or refactoring
 3. Match existing codebase patterns from Codebase Context
-4. Run the verification command after completing tasks
+4. Run the verification command from the Phase Frontmatter (verification.command)
+5. Compare output against verification.expected from frontmatter
 
 ## Output
 1. Files added/changed (with paths)
-2. Verification result (PASS/FAIL)
+2. Verification result: Run `<verification.command>`, compare to `<verification.expected>`
 3. Deviations from plan (if any)
-4. Updated "Output for Next Phase" if anything changed
+4. "Output for Next Phase" section — REQUIRED, summarize what was built for next phase
 ```
 
 ## Review Agent
@@ -86,19 +90,34 @@ Review code changes from this build phase.
 <list from build agent output>
 
 ## Design Requirements
-<relevant section from design.md>
+<relevant section from design.md — interface definitions, types, function signatures>
+
+## Phase Tasks
+<tasks from the phase file that were supposed to be implemented>
 
 ## Review Criteria
 
-1. **Correctness** — Matches design? Edge cases handled? Error handling appropriate?
-2. **Code Quality** — Follows codebase patterns? Readable? Obvious bugs?
-3. **Security** — Injection vulnerabilities? Input validation? Secrets handled?
-4. **Testing** — Tests adequate? Edge cases covered?
+1. **Design Adherence** (highest priority)
+   - Do implemented types match design.md interface definitions exactly?
+   - Do function signatures match what design.md specified?
+   - Are all specified behaviors implemented?
+   - Were any unplanned features added? (flag as CONCERN)
+
+2. **Correctness** — Edge cases handled? Error handling appropriate?
+
+3. **Code Quality** — Follows codebase patterns? Readable? Obvious bugs?
+
+4. **Security** — Injection vulnerabilities? Input validation? Secrets handled?
+
+5. **Testing** — Tests adequate? Edge cases covered?
+
+6. **Output Validation** — Does the build output include "Output for Next Phase"?
 
 ## Output
 1. **Status**: PASS or CONCERNS
-2. **Issues** (if any): Specific problems with file:line references
-3. **Suggestions** (optional): Non-blocking improvements
+2. **Design Adherence**: Matches / Deviates (list specific deviations)
+3. **Issues** (if any): Specific problems with file:line references
+4. **Suggestions** (optional): Non-blocking improvements
 ```
 
 ## Fix Agent
