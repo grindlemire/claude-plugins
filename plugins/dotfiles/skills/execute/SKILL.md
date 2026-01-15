@@ -168,28 +168,49 @@ Phase 2: middleware
 All phases complete.
 ```
 
-## Performance
+## Agent Output Caching
 
-### Explore Caching
+All agent outputs are persisted to `<design-dir>/.cache/` for reliability and resume capability.
 
-The Explore agent's output can be cached and reused:
+### Cache Structure
 
 ```
 design-<feature>/
 ├── .cache/
-│   └── explore-context.md    # Cached Explore output
-│   └── explore-hash.txt      # Hash of relevant directories
+│   ├── explore-context.md    # Codebase patterns (Explore agent)
+│   ├── phase-1-output.md     # Build output + fix attempts
+│   ├── phase-1-review.md     # Review results
+│   ├── phase-2-output.md
+│   ├── phase-2-review.md
+│   └── ...
 ```
 
-**When to reuse cache:**
-- `--resume` flag is used
-- No new files added to directories mentioned in design.md
-- Cache is less than 1 hour old
+### Why Cache?
 
-**When to refresh:**
+1. **Reliability** — Agents read context from files, not inline prompts
+2. **Resume capability** — Can restart from any point after failure
+3. **Audit trail** — See exactly what each agent did
+4. **Cross-phase context** — Later phases read earlier phase outputs
+
+### Agent File Requirements
+
+| Agent | Reads | Writes |
+|-------|-------|--------|
+| Explore | — | `.cache/explore-context.md` |
+| Build | `explore-context.md`, `design.md`, `phase-N-*.md`, previous `phase-*-output.md` | `.cache/phase-N-output.md` |
+| Review | `phase-N-output.md`, `design.md`, `phase-N-*.md`, `explore-context.md` | `.cache/phase-N-review.md` |
+| Fix | `phase-N-review.md`, `explore-context.md` | Appends to `.cache/phase-N-output.md` |
+
+### Explore Cache Freshness
+
+**Reuse explore-context.md if:**
+- Cache is less than 1 hour old
+- `--resume` flag is used
+
+**Refresh if:**
 - First execution
-- Significant time elapsed
-- New files detected in relevant paths
+- Cache is stale (> 1 hour)
+- Significant codebase changes detected
 
 ### Fast Mode
 

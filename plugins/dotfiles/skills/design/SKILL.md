@@ -99,15 +99,26 @@ Each phase:
 - Phases build incrementally — N+1 assumes N complete
 - Right-size phases — completable in one session
 
-**Task granularity** — Target file and function level:
+**Task philosophy** — Define constraints, not implementation:
+
+Tasks should specify WHAT and WHY, not HOW. Give the implementing agent goals and constraints, trust it to make good implementation decisions.
 
 ```
-- Create `auth/jwt.go`
-  - Add `Claims` struct: UserID, Exp, Roles
-  - Add `ValidateToken(token, key) (Claims, error)`
+### Task: JWT Token Validation
+
+**Goal:** Validate JWT tokens and extract user claims.
+
+**Constraints:**
+- Must implement `TokenValidator` interface from design.md
+- Must return distinct errors for: expired, invalid signature, malformed
+- Must work with RS256 algorithm
+
+**Suggested location:** `auth/jwt.go`
 ```
 
-Not too coarse (`Implement JWT auth`) or too granular (`Add import`).
+**Be specific about:** Interfaces to satisfy, error types, integration points, security constraints.
+
+**Let the agent decide:** Internal struct fields, helper organization, implementation details.
 
 ## Output
 

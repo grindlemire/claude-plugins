@@ -14,7 +14,14 @@ This skill orchestrates design plan execution by spawning specialized agents. Yo
 ### 1. Validate Design
 Read and validate `manifest.yaml` and all phase files before proceeding.
 
-### 2. Spawn Explore Agent (REQUIRED)
+### 2. Gather Codebase Context
+
+**Check for cached context first:**
+1. Look for `<design-dir>/.cache/explore-context.md`
+2. If it exists and is recent (< 1 hour old), skip to Step 3
+3. If missing or stale, spawn Explore agent
+
+**Spawn Explore Agent (if no cache):**
 ```
 Task(
   subagent_type: "Explore",
@@ -29,7 +36,32 @@ Find and summarize:
 3. **Testing patterns** — Test structure, utilities available, mocking patterns
 4. **Configuration** — How config is loaded, environment variables
 
-Provide a concise summary (under 500 words) for build agents to follow existing conventions.
+## REQUIRED OUTPUT
+
+You MUST write your findings to a cache file. Use the Write tool to create:
+
+**File:** `<design-dir>/.cache/explore-context.md`
+
+**Format:**
+```markdown
+# Codebase Context for <feature>
+
+Generated: <ISO timestamp>
+
+## Existing Patterns
+<findings>
+
+## Integration Points
+<findings>
+
+## Testing Patterns
+<findings>
+
+## Configuration
+<findings>
+```
+
+This file will be read by build agents. Do NOT skip writing this file.
 """
 )
 ```
@@ -45,30 +77,43 @@ Task(
   prompt: """
 Execute a build phase from a design plan. Follow instructions precisely.
 
-## Codebase Context
-<output from Explore agent>
+## Context Files to Read
 
-## Design Context
-<key decisions from design.md relevant to this phase>
+Before starting, read these files:
+1. `<design-dir>/.cache/explore-context.md` — Codebase patterns and conventions
+2. `<design-dir>/design.md` — Architecture and interface definitions
+3. `<design-dir>/phase-N-*.md` — The phase to execute
 
-## Previous Phase Output
-<"Output for Next Phase" from dependency, or "Starting point" for phase 1>
-
-## Phase to Execute
-<full contents of phase-N-*.md including frontmatter>
+If previous phases exist, also read their "Output for Next Phase" sections from completed phase files.
 
 ## Instructions
-1. Execute each task in the Tasks section
-2. Follow the plan precisely — no extra features or refactoring
-3. Match existing codebase patterns from Codebase Context
-4. Run the verification command from the Phase Frontmatter
-5. Compare output against verification.expected
+1. Read all context files listed above
+2. Execute each task in the phase file
+3. Follow constraints precisely — no extra features or refactoring
+4. Match existing codebase patterns from explore-context.md
+5. Run the verification command from the phase frontmatter
 
 ## Output (REQUIRED)
-1. Files added/changed (with paths)
-2. Verification result: PASS/FAIL with output
-3. Deviations from plan (if any)
-4. "Output for Next Phase" section — summarize what was built
+
+Write your output to: `<design-dir>/.cache/phase-N-output.md`
+
+**Format:**
+```markdown
+# Phase N Output: <name>
+
+## Files Changed
+- path/to/file.go — description
+
+## Verification
+Command: <verification.command>
+Result: PASS/FAIL
+Output: <actual output>
+
+## Output for Next Phase
+<summary of what was built, key decisions, integration points>
+```
+
+This file will be read by the review agent and subsequent phases.
 """
 )
 ```
@@ -82,26 +127,43 @@ Task(
   prompt: """
 Review code changes from this build phase.
 
-## Files Changed
-<list from build agent output>
+## Context Files to Read
 
-## Design Requirements
-<relevant section from design.md — interface definitions, types>
+Before reviewing, read these files:
+1. `<design-dir>/.cache/phase-N-output.md` — What the build agent changed
+2. `<design-dir>/design.md` — Interface definitions and requirements
+3. `<design-dir>/phase-N-*.md` — Tasks that were supposed to be implemented
+4. `<design-dir>/.cache/explore-context.md` — Codebase patterns to follow
 
-## Phase Tasks
-<tasks from the phase file that were supposed to be implemented>
+Then read the actual changed files listed in phase-N-output.md.
 
 ## Review Criteria
 1. **Design Adherence** — Do types/signatures match design.md exactly?
 2. **Correctness** — Edge cases handled? Error handling appropriate?
-3. **Code Quality** — Follows codebase patterns? Readable?
+3. **Code Quality** — Follows codebase patterns from explore-context.md?
 4. **Security** — Injection vulnerabilities? Input validation?
 5. **Testing** — Tests adequate?
 
-## Output
-1. **Status**: PASS or CONCERNS
-2. **Design Adherence**: Matches / Deviates (list specific deviations)
-3. **Issues** (if any): Specific problems with file:line references
+## Output (REQUIRED)
+
+Write your review to: `<design-dir>/.cache/phase-N-review.md`
+
+**Format:**
+```markdown
+# Phase N Review: <name>
+
+## Status: PASS | CONCERNS
+
+## Design Adherence
+Matches | Deviates
+<list specific deviations if any>
+
+## Issues
+<specific problems with file:line references, or "None">
+
+## Suggestions
+<non-blocking improvements, or "None">
+```
 """
 )
 ```
@@ -115,17 +177,32 @@ Task(
   prompt: """
 Fix the issues identified by the code reviewer.
 
-## Issues to Fix
-<list from code-reviewer with file:line references>
+## Context Files to Read
+
+1. `<design-dir>/.cache/phase-N-review.md` — Issues to fix
+2. `<design-dir>/.cache/explore-context.md` — Codebase patterns to follow
 
 ## Instructions
-1. Read each file needing modification
-2. Fix ONLY the specific issues listed — no other changes
-3. Re-run verification command after fixing
+1. Read the review file to understand what needs fixing
+2. Read each file needing modification
+3. Fix ONLY the specific issues listed — no other changes
+4. Re-run verification command after fixing
 
-## Output
-1. Fixes applied (each issue and how fixed)
-2. Verification result: PASS/FAIL
+## Output (REQUIRED)
+
+Update: `<design-dir>/.cache/phase-N-output.md`
+
+Append a section:
+```markdown
+## Fix Attempt M
+
+### Issues Fixed
+- <issue>: <how fixed>
+
+### Verification
+Command: <command>
+Result: PASS/FAIL
+```
 """
 )
 ```
@@ -133,6 +210,30 @@ Loop: Fix → Re-review (max 3 attempts).
 
 ### 4. Update Status
 After each phase passes review, update `manifest.yaml` status to `complete`.
+
+## Cache Directory Structure
+
+All agent outputs are persisted in `<design-dir>/.cache/`:
+
+```
+design-<feature>/
+├── .cache/
+│   ├── explore-context.md    # Codebase patterns (from Explore agent)
+│   ├── phase-1-output.md     # Build output + fix attempts
+│   ├── phase-1-review.md     # Review results
+│   ├── phase-2-output.md
+│   ├── phase-2-review.md
+│   └── ...
+├── manifest.yaml
+├── design.md
+└── phase-*.md
+```
+
+**Benefits:**
+- Agents read context from files, not inline prompts (more reliable)
+- Resume capability — can restart from any point
+- Audit trail — see what each agent did
+- Subsequent phases can read previous phase outputs
 
 ## What You MUST Do
 - ✅ Use Task tool for ALL implementation work

@@ -2,6 +2,8 @@
 
 Each phase is a self-contained markdown file. An AI agent should be able to execute a phase given only that file and the output from the previous phase.
 
+**Philosophy:** Phases define WHAT and WHY, not HOW. Give the implementing agent constraints and goals, not line-by-line instructions. The agent is intelligent — trust it to make good implementation decisions within your constraints.
+
 ## Frontmatter
 
 Every phase file must include YAML frontmatter for machine parsing:
@@ -52,26 +54,28 @@ Fields:
 
 ### Task 1: [Short Description]
 
-**Files:** `path/to/file.go`
+**Goal:** [What this task accomplishes]
 
-**Changes:**
-- Create `TypeName` struct
-  - `FieldA string` — purpose
-  - `FieldB int` — purpose
-- Add `FunctionName(param Type) (Return, error)`
-  - Handle case X by doing Y
-  - Return error if Z
+**Constraints:**
+- Must satisfy interface X from design.md
+- Must handle error cases A, B, C
+- Must be thread-safe / idempotent / etc.
+
+**Suggested location:** `path/to/file.go` (or create new file)
+
+**Notes:** [Any non-obvious requirements or gotchas]
 
 ---
 
 ### Task 2: [Short Description]
 
-**Files:** `path/to/file.go`, `path/to/other.go`
+**Goal:** [What this task accomplishes]
 
-**Changes:**
-- In `existing.go`, modify `ExistingFunc`:
-  - Add call to `NewFunc` after [specific line/condition]
-  - Handle new error case
+**Constraints:**
+- Integrate with existing `ExistingFunc` in `existing.go`
+- Preserve backward compatibility with X
+
+**Notes:** [Context the agent needs]
 
 ---
 
@@ -84,61 +88,76 @@ Fields:
 **Run:**
 ```bash
 go test ./auth/...
-# or
-curl http://localhost:8080/health
-# or
-./bin/myapp --version
 ```
 
 **Expected output:**
 ```
-PASS: TestValidateToken
-PASS: TestExpiredToken
 ok      myapp/auth    0.015s
 ```
-
-**Manual check (if applicable):**
-- [ ] [Specific observable behavior]
 
 ## Output for Next Phase
 
 [Brief summary for the agent executing the next phase. Include:]
 
 **What was added:**
-- `auth/jwt.go` — JWT validation with `ValidateToken` and `ParseUnverified`
-- `auth/jwt_test.go` — Unit tests for token validation
+- `auth/jwt.go` — JWT validation
+- `auth/jwt_test.go` — Unit tests
 
 **Key decisions made:**
-- Using RS256 for signatures (public key in env var `JWT_PUBLIC_KEY`)
-- Expired tokens return `ErrExpired`, invalid signatures return `ErrInvalidSignature`
+- [Any implementation choices that affect future phases]
 
 **Integration points for next phase:**
-- Call `auth.ValidateToken()` from HTTP middleware
-- `Claims` struct available for extracting user context
+- [Functions/types available for the next phase to use]
 ```
 
-## Granularity Guidelines
+## Writing Good Tasks
 
-**Good task granularity:**
+### Focus on Constraints, Not Implementation
+
+**Good (constraint-based):**
 ```
+### Task 1: JWT Token Validation
+
+**Goal:** Validate JWT tokens and extract user claims.
+
+**Constraints:**
+- Must implement `TokenValidator` interface from design.md
+- Must return distinct errors for: expired, invalid signature, malformed
+- Must not panic on malformed input
+- Must work with RS256 algorithm (keys from env var)
+
+**Suggested location:** `auth/jwt.go`
+```
+
+**Bad (implementation-dictating):**
+```
+### Task 1: JWT Token Validation
+
 - Create `auth/jwt.go`
-  - Add `Claims` struct: UserID (string), Exp (time.Time), Roles ([]string)
-  - Add `ValidateToken(token string, key *rsa.PublicKey) (Claims, error)`
-    - Parse JWT, verify signature, check expiration
-    - Return ErrExpired if token is expired
-    - Return ErrInvalidSignature if verification fails
+- Add `Claims` struct with fields:
+  - `UserID string`
+  - `Exp time.Time`
+  - `Roles []string`
+- Add `ValidateToken(token string, key *rsa.PublicKey) (Claims, error)`
+  - Call jwt.Parse() with the token
+  - Check if claims.ExpiresAt < time.Now()
+  - If expired, return ErrExpired
+  - ...
 ```
 
-**Too coarse (agent must make design decisions):**
-```
-- Implement JWT authentication
-```
+### When to Be Specific
 
-**Too granular (wastes tokens, slows execution):**
-```
-- Add import "crypto/rsa" to auth/jwt.go
-- Add import "time" to auth/jwt.go
-```
+**Be specific about:**
+- Public interfaces (from design.md) that must be satisfied
+- Error types that other code depends on
+- Integration points with existing code
+- Performance or security constraints
+
+**Let the agent decide:**
+- Internal struct field names
+- Helper function organization
+- Implementation approach within constraints
+- Import organization
 
 ## Phase Sizing Guidelines
 

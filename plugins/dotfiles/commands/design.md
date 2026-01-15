@@ -55,6 +55,11 @@ Wait for user confirmation before continuing.
 
 ### 5. Create Phases (only after approval)
 
+**Task philosophy:** Define constraints, not implementation. Tasks should specify WHAT and WHY, not HOW. Trust the implementing agent to make good decisions within your constraints.
+
+- **Be specific about:** Interfaces to satisfy, error types, integration points, security constraints
+- **Let the agent decide:** Internal struct fields, helper organization, implementation details
+
 Create phase files with frontmatter:
 ```yaml
 ---
