@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Custom Claude Code plugins by grindlemire",
-    "version": "1.5.0",
+    "version": "1.7.0",
     "pluginRoot": "./plugins"
   },
   "plugins": [
@@ -13,7 +13,7 @@
       "name": "dotfiles",
       "source": "./plugins/dotfiles",
       "description": "Git worktree management, mage build commands, PR workflow, feature design, and orchestrated multi-phase execution",
-      "version": "1.7.0",
+      "version": "1.9.0",
       "author": {
         "name": "grindlemire"
       },

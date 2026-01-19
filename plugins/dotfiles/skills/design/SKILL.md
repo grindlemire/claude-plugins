@@ -19,18 +19,20 @@ Transform feature specifications into technical designs and phased implementatio
 
 These requirements are **mandatory** and must never be skipped:
 
-1. **Get design feedback before phases** — Present the design to the user and receive explicit approval before creating any phase files or manifest. Do NOT proceed without user confirmation.
+1. **Ask clarifying questions BEFORE designing** — After gathering context, you MUST ask the user a series of clarifying questions before producing any design. These questions should cover feature scope, ambiguities, edge cases, and proposed architecture. Do NOT start writing the design until questions are answered.
 
-2. **Phase files MUST have YAML frontmatter** — Every phase file must include the frontmatter block with `phase`, `name`, `design`, `depends-on`, `verification`, and `status` fields. Phase files without frontmatter are invalid.
+2. **Get design feedback before phases** — Present the design to the user and receive explicit approval before creating any phase files or manifest. Do NOT proceed without user confirmation.
 
-3. **Manifest file is REQUIRED** — Every design must include a `manifest.yaml` file. The manifest tracks phase order, dependencies, and status. A design directory without a manifest is incomplete.
+3. **Phase files MUST have YAML frontmatter** — Every phase file must include the frontmatter block with `phase`, `name`, `design`, `depends-on`, `verification`, and `status` fields. Phase files without frontmatter are invalid.
+
+4. **Manifest file is REQUIRED** — Every design must include a `manifest.yaml` file. The manifest tracks phase order, dependencies, and status. A design directory without a manifest is incomplete.
 
 Failure to follow these requirements invalidates the design output.
 
 ## Workflow
 
 1. **Gather context** — Read spec, find codebase context
-2. **Clarify ambiguities** — Ask before proceeding on unclear requirements
+2. **Ask clarifying questions** — REQUIRED: Ask user about scope, ambiguities, and architecture before designing
 3. **Produce design** — Architecture, interfaces, trade-offs
 4. **Get design feedback** — Present design to user, incorporate feedback
 5. **Produce phases** — File/function-level tasks with verification
@@ -49,14 +51,52 @@ Find codebase context:
 4. Identify integration points and existing patterns
 5. Check if `./designs` directory exists (determines output location)
 
-### Step 2: Clarify Ambiguities
+### Step 2: Ask Clarifying Questions
 
-Before designing, resolve:
-- Unclear requirements
-- Missing constraints
-- Multiple valid approaches
+**This step is non-negotiable.** Before producing any design, you MUST ask the user clarifying questions. Present all questions at once in a structured format.
 
-Ask focused questions. Do not assume on critical decisions.
+**Questions must cover:**
+
+1. **Feature scope & boundaries**
+   - What exactly should this feature do?
+   - What should it explicitly NOT do?
+   - What are the success criteria?
+
+2. **Ambiguity resolution**
+   - Any unclear requirements from the spec
+   - Edge cases that need decisions
+   - Error handling expectations
+
+3. **Architecture & approach**
+   - Propose 2-3 architectural approaches with trade-offs
+   - Ask which approach the user prefers
+   - Identify integration points with existing code
+
+4. **Constraints & preferences**
+   - Performance requirements
+   - Compatibility constraints
+   - Technology/library preferences
+
+**Example question format:**
+```
+Before I create the design, I have some questions:
+
+**Scope:**
+1. Should X also handle Y, or is that out of scope?
+2. What should happen when Z occurs?
+
+**Architecture:**
+I see two main approaches:
+- **Option A:** [description] — Pros: faster. Cons: more complex.
+- **Option B:** [description] — Pros: simpler. Cons: slower.
+Which approach do you prefer?
+
+**Constraints:**
+3. Are there performance requirements I should know about?
+4. Should this integrate with [existing system] or be standalone?
+```
+
+**Do NOT proceed to Step 3 until questions are answered.**
 
 ### Step 3: Produce Design
 
@@ -172,11 +212,26 @@ phase: 1
 name: short-name
 design: ../design.md
 depends-on: []
+context-files:              # Optional: files agent should read first
+  - pkg/auth/*.go
 verification:
   command: "go test ./path/..."
   expected: "PASS"
 status: pending
 ---
+```
+
+For phases requiring multiple verification checks:
+
+```yaml
+verification:
+  criteria:
+    - name: "Unit tests"
+      command: "go test ./pkg/auth/..."
+      expected: "PASS"
+    - name: "Build"
+      command: "go build ./..."
+      expected: "exit 0"
 ```
 
 ## Execution

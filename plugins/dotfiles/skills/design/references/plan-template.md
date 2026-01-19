@@ -14,10 +14,31 @@ phase: N
 name: short-name
 design: ../design.md
 depends-on: [phase-N-1-previous.md]  # Empty array for phase 1
-verification:
+context-files:                        # Optional: files to read before starting
+  - pkg/auth/*.go
+  - internal/models/user.go
+verification:                         # Single command (simple)
   command: "go test ./path/..."
   expected: "PASS"
 status: pending
+---
+```
+
+For multiple verification criteria:
+
+```yaml
+---
+verification:
+  criteria:
+    - name: "Unit tests"
+      command: "go test ./pkg/auth/..."
+      expected: "PASS"
+    - name: "Build"
+      command: "go build ./..."
+      expected: "exit 0"
+    - name: "Lint"
+      command: "golangci-lint run ./pkg/auth/..."
+      expected: "exit 0"
 ---
 ```
 
@@ -26,8 +47,8 @@ Fields:
 - `name`: Short identifier matching filename
 - `design`: Relative path to design.md
 - `depends-on`: Array of prerequisite phase files
-- `verification.command`: Shell command to verify phase completion
-- `verification.expected`: Expected output pattern (substring match)
+- `context-files`: (optional) Glob patterns for files to read before execution
+- `verification`: Single command OR `criteria` array with multiple checks
 - `status`: `pending` | `in-progress` | `complete` | `failed`
 
 ## Body
@@ -97,17 +118,27 @@ ok      myapp/auth    0.015s
 
 ## Output for Next Phase
 
-[Brief summary for the agent executing the next phase. Include:]
+[Structured summary for downstream phases. This format is required.]
 
-**What was added:**
-- `auth/jwt.go` — JWT validation
+**IMPORTANT: Total output MUST be ≤40 lines** to keep downstream context lean.
+
+**Status:** (1 line)
+COMPLETE | BLOCKED: <reason if blocked>
+
+**Files changed:** (max 10 lines)
+- `auth/jwt.go` — JWT validation logic
 - `auth/jwt_test.go` — Unit tests
 
-**Key decisions made:**
-- [Any implementation choices that affect future phases]
+**Exposed interfaces:** (max 15 lines)
+- `ValidateToken(token string) (Claims, error)` — validates JWT, returns claims
+- `Claims` struct — contains UserID, Roles, ExpiresAt fields
+- `ErrExpired`, `ErrInvalidSignature` — sentinel errors for callers
 
-**Integration points for next phase:**
-- [Functions/types available for the next phase to use]
+**Integration points:** (max 5 lines)
+- Import `myapp/auth` to use ValidateToken
+- Middleware should call ValidateToken and check for ErrExpired
+
+If you need to document more, reference file paths (e.g., "See `auth/jwt.go` for full API").
 ```
 
 ## Writing Good Tasks
